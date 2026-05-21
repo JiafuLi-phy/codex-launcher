@@ -102,11 +102,17 @@ function writeProxyToml() {
 function startProxy() {
   if (proxyProcess) return;
   const proxyPath = path.join(__dirname, 'proxy.js');
-  proxyProcess = spawn(process.execPath, [proxyPath, String(config.port)], {
+  // Find node binary: use which, fallback to process.execPath
+  let nodeBin = process.execPath;
+  if (nodeBin.includes('Electron') || nodeBin.includes('Codex Launcher')) {
+    try { nodeBin = require('child_process').execSync('which node', {encoding:'utf8'}).trim(); } catch {}
+    if (!nodeBin) nodeBin = '/usr/local/bin/node';
+  }
+  proxyProcess = spawn(nodeBin, [proxyPath, String(config.port)], {
     env: { ...process.env, CONFIG_FILE },
     stdio: 'ignore'
   });
-  proxyProcess.on('error', () => { proxyProcess = null; });
+  proxyProcess.on('error', (e) => { console.error('Proxy spawn error:', e.message); proxyProcess = null; });
   proxyProcess.on('exit', () => { proxyProcess = null; });
 }
 
