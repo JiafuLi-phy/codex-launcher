@@ -220,15 +220,52 @@ ipcMain.handle('stop-proxy', () => { stopProxy(); return true; });
 ipcMain.handle('launch-codex', () => { launchCodex(); });
 ipcMain.handle('proxy-status', () => !!proxyProcess);
 
+// ── Auto-update model list from GitHub ──
+
+const MODEL_LIST_URL = 'https://raw.githubusercontent.com/JiafuLi-phy/codex-launcher/main/models.json';
+
+async function checkModelUpdates() {
+  try {
+    const https = require('https');
+    const resp = await new Promise((resolve, reject) => {
+      https.get(MODEL_LIST_URL, resolve).on('error', reject);
+    });
+    if (resp.statusCode !== 200) return;
+    let data = '';
+    resp.on('data', c => data += c);
+    await new Promise(resolve => resp.on('end', resolve));
+    const remote = JSON.parse(data);
+    if (!remote.models) return;
+
+    // Merge remote models into local config (keep user's API keys)
+    let added = 0;
+    for (const rm of remote.models) {
+      if (!config.models.find(m => m.id === rm.id)) {
+        config.models.push({ ...rm, apiKey: '' });
+        added++;
+      }
+    }
+    if (added > 0) { saveConfig(); console.log(`Auto-added ${added} new models`); }
+  } catch(e) { /* silent - network may be offline */ }
+}
+
 // ── App lifecycle ──
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   loadConfig();
+  await checkModelUpdates();
   startProxy();
   tray = new Tray(makeIcon());
   tray.setToolTip('Codex Launcher');
   tray.setContextMenu(buildMenu());
   tray.on('double-click', launchCodex);
+
+  // Auto-update app from GitHub Releases
+  try {
+    const { autoUpdater } = require('electron-updater');
+    autoUpdater.checkForUpdatesAndNotify();
+    setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 6 * 3600 * 1000); // every 6h
+  } catch(e) { /* electron-updater not installed in dev mode */ }
 });
 
 app.on('before-quit', stopProxy);
