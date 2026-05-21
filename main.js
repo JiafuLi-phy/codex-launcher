@@ -139,13 +139,13 @@ function launchCodex() {
 // ── Tray icon ──
 
 function makeIcon() {
-  // Generate a simple 16x16 tray icon on first run
+  // Generate a minimal 16x16 icon: dark grey circle with no frills
   const iconPath = path.join(CONFIG_DIR, 'tray-icon.png');
   if (!fs.existsSync(iconPath)) {
+    // Simple 16x16 dark circle PNG (base64 encoded, valid minimal PNG)
     const png = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABMklEQVQ4T2NkoDFgpLH5DK5' +
-      'uXgx//vxh4ODgYJg6dQoDJRAZ5cXAwcFBeQM+f/nO4Ojiw1BZUcTgYO/E8O3rZ2BrmJiYKGrD' +
-      'x48fGf7//0+xDQAxfJ0+LOszggAAAABJRU5ErkJggg==', 'base64');
+      'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVQ4T2NkYPj/n4EBBJgY' +
+      'KAQYqSUMDAwM/wHxAADa6QhmNMd5IAAAAABJRU5ErkJggg==', 'base64');
     fs.writeFileSync(iconPath, png);
   }
   return nativeImage.createFromPath(iconPath);
@@ -155,9 +155,9 @@ function makeIcon() {
 
 function buildMenu() {
   return Menu.buildFromTemplate([
-    { label: '🚀 Launch Codex', click: launchCodex },
+    { label: 'Launch Codex', click: launchCodex },
     { type: 'separator' },
-    { label: '▸ Select Model', enabled: false },
+    { label: 'Select Model', enabled: false },
     ...config.models.map(m => ({
       label: (m.id === config.activeModel ? '✓ ' : '  ') + m.name,
       click: () => {
@@ -168,7 +168,7 @@ function buildMenu() {
       }
     })),
     { type: 'separator' },
-    { label: '⚙ Model Settings...', click: () => {
+    { label: 'Model Settings...', click: () => {
         if (mainWindow) mainWindow.show();
         else openSettings();
     }},
