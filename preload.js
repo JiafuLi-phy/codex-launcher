@@ -15,4 +15,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stopProxy:       () => ipcRenderer.invoke('stop-proxy'),
   launchCodex:     () => ipcRenderer.invoke('launch-codex'),
   getProxyStatus:  () => ipcRenderer.invoke('proxy-status'),
+  getStats:       () => ipcRenderer.invoke('get-stats'),
+  speedTest:      () => ipcRenderer.invoke('speed-test'),
 });

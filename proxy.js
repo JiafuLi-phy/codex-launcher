@@ -162,6 +162,25 @@ function staticResp(socket, rid, iid, model, text, done) {
   finish(socket, rid, iid, model, text, done);
 }
 
+// ── Token usage tracking ──
+let stats = { totalTokens: 0, totalCalls: 0, totalCost: 0, perModel: {} };
+try { stats = JSON.parse(fs.readFileSync(os.homedir() + '/.codex-launcher/stats.json', 'utf8')); } catch {}
+function recordUsage(m, usage) {
+  if (!usage) return;
+  const tokens = (usage.total_tokens || usage.completion_tokens || 0);
+  stats.totalTokens += tokens;
+  stats.totalCalls++;
+  stats.totalCost += tokens * 0.000001;
+  const key = m.name || m.id;
+  if (!stats.perModel[key]) stats.perModel[key] = { tokens: 0, cost: 0, calls: 0 };
+  stats.perModel[key].tokens += tokens;
+  stats.perModel[key].calls++;
+  stats.perModel[key].cost += tokens * 0.000001;
+}
+function recordUsageEnd(m) {
+  try { fs.writeFileSync(os.homedir() + '/.codex-launcher/stats.json', JSON.stringify(stats)); } catch {}
+}
+
 // ── Main WS handler: one response.create → one Chat Completions stream ──
 function handleCreate(socket, rj, cfg, done) {
   const cm = rj.model || 'gpt-5.4';
@@ -198,6 +217,7 @@ function handleCreate(socket, rj, cfg, done) {
     beStream('POST', '/v1/chat/completions', Buffer.from(JSON.stringify(cr)), null, m,
       (c) => {
         const d = c.choices?.[0]?.delta?.content || '';
+        if (c.usage) recordUsage(m, c.usage);
         if (d) {
           if (!tagSent) { d = tag + d; tagSent = true; }
           fullText += d;
@@ -205,8 +225,8 @@ function handleCreate(socket, rj, cfg, done) {
             item_id: iid, output_index: 0, content_index: 0, delta: d }));
         }
       },
-      () => finish(socket, rid, iid, model, fullText, done),
-      (e) => finish(socket, rid, iid, model, fullText || '(err)', () => setTimeout(done, 2000)));
+      () => { recordUsageEnd(m); finish(socket, rid, iid, model, fullText, done); },
+      (e) => { recordUsageEnd(m); finish(socket, rid, iid, model, fullText || '(err)', () => setTimeout(done, 2000)); });
   }, 150);
 }
 

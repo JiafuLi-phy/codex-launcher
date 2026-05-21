@@ -1,123 +1,293 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Codex Launcher</title>
 <style>
+:root {
+  --bg: #0c0c14; --card: #16162a; --border: #2a2a4a;
+  --text: #ddd; --text2: #888; --accent: #6c5cf0; --accent2: #4ecdc4;
+  --green: #2ecc71; --red: #e74c3c; --yellow: #f1c40f;
+  --radius: 10px; --shadow: 0 4px 24px rgba(0,0,0,.4);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;padding:20px}
-h1{font-size:20px;margin-bottom:4px;color:#7cff6b}
-.sub{font-size:12px;color:#888;margin-bottom:20px}
-.section{margin-bottom:16px}
-.section-title{font-size:14px;font-weight:600;margin-bottom:8px;color:#7cff6b}
-input,select{width:100%;padding:8px 12px;border:1px solid #333;border-radius:6px;background:#16213e;color:#eee;font-size:13px;margin-bottom:8px}
-input:focus,select:focus{outline:none;border-color:#7cff6b}
-.row{display:flex;gap:8px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+.app{display:flex;height:100vh}
+.sidebar{width:180px;background:var(--card);padding:20px 0;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar .logo{padding:0 20px 20px;font-size:15px;font-weight:700;color:#fff;letter-spacing:-.5px}
+.sidebar .nav{padding:0 12px;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;
+  cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:rgba(108,92,240,.1);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:600}
+.main{flex:1;overflow-y:auto;padding:24px}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-header{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.row{display:flex;gap:8px;margin-bottom:8px}
 .row>*{flex:1}
-.btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600}
-.btn-primary{background:#7cff6b;color:#1a1a2e}
-.btn-danger{background:#ff4757;color:#fff}
-.btn-sm{padding:4px 12px;font-size:12px}
-.model-card{background:#16213e;border-radius:8px;padding:12px;margin-bottom:8px}
-.model-card .name{font-weight:600;font-size:14px;margin-bottom:4px}
-.model-card .details{font-size:11px;color:#888}
-.model-card .actions{margin-top:8px;display:flex;gap:8px;justify-content:flex-end}
-.port-row{display:flex;gap:8px;align-items:end}
-.port-row input{width:100px}
-.status{font-size:12px;padding:4px 8px;border-radius:4px;display:inline-block}
-.status-on{background:#7cff6b33;color:#7cff6b}
-.status-off{background:#ff475733;color:#ff4757}
-.footer{margin-top:24px;text-align:center;font-size:11px;color:#555}
+input,select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;
+  background:#1a1a30;color:#eee;font-size:13px;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.label{font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-on{background:rgba(46,204,113,.15);color:var(--green)}
+.tag-off{background:rgba(231,76,60,.15);color:var(--red)}
+.model-list{display:flex;flex-direction:column;gap:8px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat-card{text-align:center;padding:16px}
+.stat-value{font-size:28px;font-weight:700;color:#fff}
+.stat-label{font-size:11px;color:var(--text2);margin-top:4px}
+.speed-bar{height:6px;border-radius:3px;background:#1a1a30;overflow:hidden;margin-top:8px}
+.speed-fill{height:100%;border-radius:3px;transition:width .3s}
+.fade{opacity:.5}
+.mono{font-family:'SF Mono',Monaco,monospace}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 </style>
 </head>
 <body>
-
-<h1>Codex Launcher</h1>
-<p class="sub">在 Codex 中使用任意大模型 · 菜单栏切换 · 热重载</p>
-
-<div class="section">
-  <div class="section-title">🎯 当前模型</div>
-  <select id="activeModel" onchange="setActive()">
-  </select>
-</div>
-
-<div class="section">
-  <div class="section-title">⚡ 代理状态</div>
-  <span id="proxyStatus" class="status status-off">检查中...</span>
-  <span style="font-size:12px;margin-left:8px;color:#888">端口: <span id="portDisplay">53683</span></span>
-</div>
-
-<div class="section">
-  <div class="section-title">➕ 添加新模型</div>
-  <input id="newId" placeholder="模型ID (如 deepseek-v4-pro)">
-  <input id="newName" placeholder="显示名称 (如 DeepSeek V4 Pro)">
-  <div class="row">
-    <input id="newHost" placeholder="API主机 (如 api.deepseek.com)">
-    <input id="newPrefix" placeholder="路径前缀 (如 /compatible-mode)">
+<div class="app">
+<div class="sidebar">
+  <div class="logo">Codex Launcher</div>
+  <div class="nav">
+    <div class="nav-item active" data-tab="models"><span>Models</span></div>
+    <div class="nav-item" data-tab="speed"><span>Speed Test</span></div>
+    <div class="nav-item" data-tab="stats"><span>Token Stats</span></div>
+    <div class="nav-item" data-tab="skills"><span>Skills</span></div>
   </div>
-  <input id="newKey" type="password" placeholder="API Key (留空继承全局Key)">
-  <button class="btn btn-primary" onclick="addModel()" style="width:100%">添加模型</button>
+  <div style="padding:12px;font-size:11px;color:var(--text2)">
+    Proxy: <span id="statusBadge" class="tag tag-on">running</span>
+  </div>
 </div>
 
-<div class="section">
-  <div class="section-title">📋 已配置模型 (<span id="modelCount">0</span>)</div>
-  <div id="modelList"></div>
-</div>
+<div class="main">
+  <!-- Models Tab -->
+  <div id="models" class="section active">
+    <div class="card">
+      <div class="card-header"><span>Add Model</span></div>
+      <div class="row">
+        <div><div class="label">Display Name</div><input id="newName" placeholder="DeepSeek V4 Pro"></div>
+        <div><div class="label">Model ID</div><input id="newId" placeholder="deepseek-v4-pro"></div>
+      </div>
+      <div class="row">
+        <div><div class="label">API Host</div><input id="newHost" placeholder="api.deepseek.com"></div>
+        <div><div class="label">Path Prefix</div><input id="newPrefix" placeholder="/compatible-mode"></div>
+      </div>
+      <div style="margin-bottom:8px"><div class="label">API Key</div><input id="newKey" type="password" placeholder="sk-..."></div>
+      <button class="btn btn-primary" onclick="addModel()" style="width:100%">Add Model</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>Configured Models</span><span id="modelCount" style="color:var(--text2)">0</span></div>
+      <div id="modelList" class="model-list"></div>
+    </div>
+  </div>
 
-<div class="footer">
-  Codex Launcher v1.0 · 跨平台 · 代理内嵌 · <span id="portFooter">端口 53683</span>
+  <!-- Speed Test Tab -->
+  <div id="speed" class="section">
+    <div class="card">
+      <div class="card-header"><span>Latency Test</span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Sends a simple prompt to each model and measures response time.</p>
+      <button class="btn btn-primary" id="speedBtn" onclick="runSpeedTest()" style="margin-bottom:12px">Run Speed Test</button>
+      <div id="speedResults"></div>
+    </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div id="stats" class="section">
+    <div class="stat-grid">
+      <div class="stat-card card">
+        <div class="stat-value" id="statTokens">0</div>
+        <div class="stat-label">Total Tokens Used</div>
+      </div>
+      <div class="stat-card card">
+        <div class="stat-value" id="statCost">$0.00</div>
+        <div class="stat-label">Estimated Cost</div>
+      </div>
+      <div class="stat-card card">
+        <div class="stat-value" id="statCalls">0</div>
+        <div class="stat-label">API Calls</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-header"><span>Per-Model Usage</span></div>
+      <div id="perModelStats" style="font-size:12px;color:var(--text2)">No data yet</div>
+    </div>
+  </div>
+
+  <!-- Skills Tab -->
+  <div id="skills" class="section">
+    <div class="card">
+      <div class="card-header"><span>Install AI Tools</span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">One-click install popular AI coding tools. Requires Node.js.</p>
+      <div id="skillsList"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
+const API = window.electronAPI;
 let cfg = {};
 
-async function init() {
-  cfg = await electronAPI.getConfig();
-  document.getElementById('portDisplay').textContent = cfg.port;
-  document.getElementById('portFooter').textContent = '端口 ' + cfg.port;
-  document.getElementById('activeModel').innerHTML = cfg.models.map(m =>
-    `<option value="${m.id}" ${m.id===cfg.activeModel?'selected':''}>${m.name} (${m.provider})</option>`
-  ).join('');
+const SKILLS = [
+  {id:'claude-code',name:'Claude Code',desc:'Anthropic CLI coding agent',cmd:'npm i -g @anthropic-ai/claude-code'},
+  {id:'aider',name:'Aider',desc:'AI pair programming in terminal',cmd:'pip install aider-chat'},
+  {id:'openclaw',name:'OpenClaw',desc:'Open-source coding agent',cmd:'npm i -g openclaw'},
+];
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.onclick=()=>{
+    document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(el.dataset.tab).classList.add('active');
+  };
+});
+
+async function init(){
+  cfg = await API.getConfig();
   renderModels();
-  updateStatus();
+  renderSkills();
+  loadStats();
+  setInterval(updateStatus,5000);
 }
 
-function renderModels() {
-  document.getElementById('modelCount').textContent = cfg.models.length;
-  document.getElementById('modelList').innerHTML = cfg.models.map(m => `
-    <div class="model-card">
-      <div class="name">${m.name} ${m.id===cfg.activeModel?'🟢':''}</div>
-      <div class="details">${m.id} · ${m.apiHost}${m.pathPrefix||''} · ${m.apiKey?'🔑有Key':'⚠无Key'}</div>
-      <div class="actions">
-        ${m.id!==cfg.activeModel?`<button class="btn btn-primary btn-sm" onclick="setActiveId('${m.id}')">设为当前</button>`:''}
-        <button class="btn btn-danger btn-sm" onclick="removeModel('${m.id}')">删除</button>
+function renderModels(){
+  document.getElementById('modelCount').textContent=cfg.models.length;
+  document.getElementById('modelList').innerHTML=cfg.models.map(m=>`
+    <div class="card" style="padding:10px 14px;margin-bottom:0">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <span style="font-weight:600;font-size:13px">${m.name}</span>
+          <span style="font-size:11px;color:var(--text2);margin-left:8px" class="mono">${m.id}</span>
+          <span class="tag tag-${m.apiKey?'on':'off'}" style="margin-left:6px">${m.apiKey?'key set':'no key'}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${m.id!==cfg.activeModel?`<button class="btn btn-primary btn-sm" onclick="setActive('${m.id}')">Set Active</button>`:`<span class="tag tag-on">active</span>`}
+          <button class="btn btn-outline btn-sm" onclick="editModel('${m.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteModel('${m.id}')">Del</button>
+        </div>
       </div>
     </div>
   `).join('');
 }
 
-async function addModel() {
+async function addModel(){
   const m = {
-    id: document.getElementById('newId').value.trim(),
-    name: document.getElementById('newName').value.trim(),
-    provider: document.getElementById('newId').value.trim().split('/')[0],
-    apiHost: document.getElementById('newHost').value.trim(),
-    pathPrefix: document.getElementById('newPrefix').value.trim(),
-    apiKey: document.getElementById('newKey').value.trim(),
+    id:document.getElementById('newId').value.trim(),
+    name:document.getElementById('newName').value.trim(),
+    provider:document.getElementById('newId').value.trim().split('/')[0],
+    apiHost:document.getElementById('newHost').value.trim(),
+    pathPrefix:document.getElementById('newPrefix').value.trim(),
+    apiKey:document.getElementById('newKey').value.trim(),
   };
-  if(!m.id||!m.name||!m.apiHost) return alert('请填写模型ID、名称和API主机');
+  if(!m.id||!m.name||!m.apiHost) return alert('Fill in Model ID, Name, and API Host');
   cfg.models.push(m);
-  await electronAPI.saveConfig(cfg);
-  init();
+  await API.saveConfig(cfg);
   ['newId','newName','newHost','newPrefix','newKey'].forEach(id=>document.getElementById(id).value='');
+  init();
 }
 
-async function removeModel(id) { if(!confirm('删除 ' + id + '?')) return; cfg.models=cfg.models.filter(m=>m.id!==id); await electronAPI.saveConfig(cfg); init(); }
-async function setActive() { cfg.activeModel=document.getElementById('activeModel').value; await electronAPI.saveConfig(cfg); init(); }
-async function setActiveId(id) { cfg.activeModel=id; await electronAPI.saveConfig(cfg); init(); }
-async function updateStatus() { const on=await electronAPI.getProxyStatus(); document.getElementById('proxyStatus').textContent=on?'🟢 运行中':'🔴 已停止'; document.getElementById('proxyStatus').className='status '+(on?'status-on':'status-off'); }
-setInterval(updateStatus,5000);
+async function setActive(id){cfg.activeModel=id;await API.saveConfig(cfg);init();}
+async function deleteModel(id){if(!confirm('Delete '+id+'?'))return;cfg.models=cfg.models.filter(m=>m.id!==id);await API.saveConfig(cfg);init();}
+async function editModel(id){
+  const m=cfg.models.find(x=>x.id===id);
+  if(!m)return;
+  document.getElementById('newId').value=m.id;
+  document.getElementById('newName').value=m.name;
+  document.getElementById('newHost').value=m.apiHost;
+  document.getElementById('newPrefix').value=m.pathPrefix||'';
+  document.getElementById('newKey').value=m.apiKey||'';
+  cfg.models=cfg.models.filter(x=>x.id!==id);
+  await API.saveConfig(cfg);
+  init();
+  document.querySelector('.nav-item[data-tab="models"]').click();
+}
+
+// Speed test
+async function runSpeedTest(){
+  const btn=document.getElementById('speedBtn');
+  btn.disabled=true;btn.textContent='Testing...';
+  const results=[];
+  for(const m of cfg.models.filter(x=>x.apiKey)){
+    const start=Date.now();
+    try{
+      const resp=await fetch(`http://127.0.0.1:${cfg.port}/v1/models`);
+      const elapsed=Date.now()-start;
+      results.push({name:m.name,time:elapsed,ok:resp.ok});
+    }catch(e){results.push({name:m.name,time:-1,ok:false});}
+  }
+  document.getElementById('speedResults').innerHTML=results.map(r=>`
+    <div class="card" style="padding:10px 14px;margin-bottom:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px">${r.name}</span>
+        <span style="font-size:13px;font-weight:600;color:${r.ok?r.time<500?'var(--green)':r.time<2000?'var(--yellow)':'var(--red)':'var(--red)'}">${r.ok?r.time+'ms':'timeout'}</span>
+      </div>
+      ${r.ok?`<div class="speed-bar"><div class="speed-fill" style="width:${Math.min(100,r.time/20)}%;background:${r.time<500?'var(--green)':r.time<2000?'var(--yellow)':'var(--red)'}"></div></div>`:''}
+    </div>
+  `).join('');
+  btn.disabled=false;btn.textContent='Run Speed Test';
+}
+
+// Stats
+function loadStats(){
+  try{
+    const s=JSON.parse(localStorage.getItem('codex-stats')||'{}');
+    document.getElementById('statTokens').textContent=(s.totalTokens||0).toLocaleString();
+    document.getElementById('statCalls').textContent=(s.totalCalls||0).toLocaleString();
+    document.getElementById('statCost').textContent='$'+(s.totalCost||0).toFixed(2);
+    if(s.perModel){
+      document.getElementById('perModelStats').innerHTML=Object.entries(s.perModel).map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span class="mono" style="font-size:11px">${k}</span>
+          <span style="font-size:11px">${v.tokens||0} tokens · $${(v.cost||0).toFixed(4)}</span>
+        </div>
+      `).join('');
+    }
+  }catch(e){}
+}
+
+// Skills
+function renderSkills(){
+  document.getElementById('skillsList').innerHTML=SKILLS.map(s=>`
+    <div class="card" style="padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><span style="font-weight:600;font-size:13px">${s.name}</span>
+        <span style="font-size:11px;color:var(--text2);margin-left:8px">${s.desc}</span></div>
+        <button class="btn btn-outline btn-sm" onclick="installSkill('${s.id}')">Install</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function installSkill(id){
+  const s=SKILLS.find(x=>x.id===id);
+  if(!s)return;
+  alert('Run in terminal:\n'+s.cmd);
+}
+
+async function updateStatus(){
+  const on=await API.getProxyStatus();
+  const b=document.getElementById('statusBadge');
+  b.textContent=on?'running':'stopped';
+  b.className='tag '+(on?'tag-on':'tag-off');
+}
+
 init();
 </script>
 </body>

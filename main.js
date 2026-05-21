@@ -219,6 +219,33 @@ ipcMain.handle('start-proxy', () => { startProxy(); return !!proxyProcess; });
 ipcMain.handle('stop-proxy', () => { stopProxy(); return true; });
 ipcMain.handle('launch-codex', () => { launchCodex(); });
 ipcMain.handle('proxy-status', () => !!proxyProcess);
+ipcMain.handle('get-stats', () => {
+  try {
+    return JSON.parse(require('fs').readFileSync(
+      require('path').join(require('os').homedir(), '.codex-launcher', 'stats.json'), 'utf8'));
+  } catch(e) { return { totalTokens: 0, totalCalls: 0, totalCost: 0, perModel: {} }; }
+});
+ipcMain.handle('speed-test', async () => {
+  const results = [];
+  for (const m of config.models.filter(x => x.apiKey)) {
+    const start = Date.now();
+    try {
+      await new Promise((resolve, reject) => {
+        const https = require('https');
+        const req = https.request({ hostname: m.apiHost, port: 443,
+          path: (m.pathPrefix || '') + '/v1/models', method: 'GET',
+          headers: { Authorization: 'Bearer ' + m.apiKey } }, resp => {
+          resp.on('end', resolve); resp.resume();
+        });
+        req.on('error', reject);
+        req.setTimeout(5000, () => { req.destroy(); reject(new Error('timeout')); });
+        req.end();
+      });
+      results.push({ id: m.id, name: m.name, time: Date.now() - start, ok: true });
+    } catch(e) { results.push({ id: m.id, name: m.name, time: -1, ok: false }); }
+  }
+  return results;
+});
 
 // ── Auto-update model list from GitHub ──
 
